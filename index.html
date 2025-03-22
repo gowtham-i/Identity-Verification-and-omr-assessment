@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMR Verification & Assessment</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('./WhatsApp\ Image\ 2025-03-14\ at\ 03.16.42_a843ba28.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+        .container {
+            background: rgba(47, 54, 80, 0.85);
+            padding: 30px;
+            border-radius: 6%;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2);
+            text-align: center;
+            max-width: 450px;
+            width: 50%;
+        }
+        h1, h2 {
+            color: #f8f9fa;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        input[type="file"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            background: #f8f9fa;
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #previewOMR {
+            max-width: 20%;
+            height: auto;
+            margin-top: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            display: none;
+        }
+        #verification, #marks {
+            font-weight: bold;
+            color: #f8f9fa;
+            margin-top: 12px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OMR Verification & Student Assessment</h1>
+        
+        <h2>Upload OMR Sheet</h2>
+        <input type="file" id="omrUpload" accept="image/*" onchange="previewImage('omrUpload', 'previewOMR')">
+        <img id="previewOMR" src="" alt="OMR Preview">
+        
+        <h2>Enter Registration Number</h2>
+        <input type="text" id="registrationNumber" placeholder="Enter Registration Number">
+        
+        <button onclick="processOMR()">Verify & Calculate Marks</button>
+
+        <h2>Verification Status</h2>
+        <div id="verification"></div>
+        
+        <h2>Marks Obtained</h2>
+        <div id="marks"></div>
+    </div>
+    
+    <script>
+        function previewImage(inputId, imgId) {
+            const file = document.getElementById(inputId).files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imgElement = document.getElementById(imgId);
+                imgElement.src = event.target.result;
+                imgElement.style.display = "block";
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function processOMR() {
+            console.log("Button Clicked!");
+
+            const fileInput = document.getElementById("omrUpload");
+            const registrationNumber = document.getElementById("registrationNumber").value;
+            const verificationDiv = document.getElementById("verification");
+            const marksDiv = document.getElementById("marks");
+
+            if (!fileInput.files.length) {
+                alert("Please upload an OMR sheet.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("omrImage", fileInput.files[0]);
+            formData.append("registrationNumber", registrationNumber); 
+
+            console.log("Sending request to backend...");
+
+            fetch("http://127.0.0.1:5000/process_omr", {  
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response received:", data);
+                if (data.error) {
+                    verificationDiv.innerHTML = <span style="color:red;">${data.error}</span>;
+                } else {
+                    verificationDiv.innerHTML = <span style="color:green;">Verification Successful</span>;
+                    marksDiv.innerHTML = Marks Obtained: <strong>${data.score}</strong>;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                verificationDiv.innerHTML = <span style="color:red;">Error processing OMR.</span>;
+            });
+        }
+    </script>
+</body>
+</html>
